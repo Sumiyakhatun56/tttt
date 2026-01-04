@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GreenThumb Connect | Community Garden Platform</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* All the CSS from the previous frontend.html goes here */
+        /* I'll include the complete CSS but condensed for brevity */
+        
+        :root {
+            --primary-green: #2e7d32; --light-green: #4caf50; --lighter-green: #81c784;
+            --background-green: #f1f8e9; --dark-green: #1b5e20; --error-red: #f44336;
+            --white: #ffffff; --text-dark: #333; --text-light: #666;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--background-green); color: var(--text-dark); line-height: 1.6; }
+        .hidden { display: none !important; }
+        .btn { padding: 12px 24px; border-radius: 50px; font-weight: 600; cursor: pointer; border: none; transition: all 0.3s ease; }
+        .btn-primary { background-color: var(--primary-green); color: var(--white); }
+        .btn-primary:hover { background-color: var(--dark-green); }
+        
+        /* Login Page */
+        .login-page { display: flex; height: 100vh; }
+        .login-left { flex: 1; background: linear-gradient(rgba(46, 125, 50, 0.9), rgba(76, 175, 80, 0.9)); display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px; color: white; text-align: center; }
+        .login-logo { display: flex; align-items: center; gap: 15px; margin-bottom: 30px; }
+        .login-logo i { font-size: 3.5rem; }
+        .login-logo h1 { font-size: 2.5rem; font-weight: 700; }
+        .login-right { flex: 1; background-color: var(--white); display: flex; flex-direction: column; justify-content: center; padding: 40px; }
+        .login-form-container { max-width: 400px; margin: 0 auto; width: 100%; }
+        .form-group { margin-bottom: 20px; }
+        .form-control { width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+        .error-message { color: var(--error-red); margin-bottom: 15px; padding: 10px; background-color: rgba(244, 67, 54, 0.1); border-radius: 5px; display: none; }
+        
+        /* Dashboard */
+        .dashboard-page { display: flex; height: 100vh; }
+        .sidebar { width: 250px; background-color: var(--dark-green); color: white; display: flex; flex-direction: column; }
+        .main-content { flex: 1; display: flex; flex-direction: column; }
+        .top-bar { background-color: var(--white); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .page-content { flex: 1; padding: 30px; overflow-y: auto; }
+        .dashboard-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-bottom: 40px; }
+        .dashboard-card { background-color: var(--white); border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .card-value { font-size: 2rem; font-weight: 700; color: var(--dark-green); }
+        .project-info-page { background-color: var(--white); border-radius: 10px; padding: 30px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 25px; margin-top: 30px; }
+        .team-member-card { text-align: center; padding: 20px; border-radius: 10px; background-color: #f5f5f5; }
+        .member-avatar { width: 80px; height: 80px; border-radius: 50%; background-color: var(--lighter-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 2rem; color: var(--dark-green); }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .login-page { flex-direction: column; }
+            .dashboard-page { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="login-page">
+        <div class="login-left">
+            <div class="login-logo">
+                <i class="fas fa-seedling"></i>
+                <h1>GreenThumb Connect</h1>
+            </div>
+            <p class="login-tagline">Grow Together, Harvest Together. A comprehensive platform to coordinate community gardens.</p>
+            <div class="login-features">
+                <div class="login-feature"><i class="fas fa-tasks"></i> Task Management</div>
+                <div class="login-feature"><i class="fas fa-map-marked-alt"></i> Plot Coordination</div>
+                <div class="login-feature"><i class="fas fa-users"></i> Community Connection</div>
+            </div>
+        </div>
+        
+        <div class="login-right">
+            <div class="login-form-container">
+                <h2>Welcome Back</h2>
+                <p>Sign in to access your garden dashboard</p>
+                
+                <div id="loginError" class="error-message">
+                    Invalid credentials. Please try again.
+                </div>
+                
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Username or Email</label>
+                        <input type="text" id="username" class="form-control" placeholder="Enter username or email" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" class="form-control" placeholder="Enter password" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" style="width: 100%; padding: 14px;">
+                        <i class="fas fa-sign-in-alt"></i> Sign In
+                    </button>
+                </form>
+                
+                <div class="demo-credentials" style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                    <h4>Demo Credentials:</h4>
+                    <p>Username: <strong>gardener1</strong> or <strong>gardener@example.com</strong></p>
+                    <p>Password: <strong>demo123</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Page -->
+    <div id="dashboardPage" class="dashboard-page hidden">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header" style="padding: 25px 20px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <div class="sidebar-logo" style="display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-seedling"></i>
+                    <span>GreenThumb Connect</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-nav" style="flex: 1; padding: 20px 0;">
+                <a href="#" class="nav-item active" data-page="home" style="display: flex; align-items: center; gap: 15px; padding: 15px 20px; color: rgba(255,255,255,0.8); text-decoration: none;">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-page="garden" style="display: flex; align-items: center; gap: 15px; padding: 15px 20px; color: rgba(255,255,255,0.8); text-decoration: none;">
+                    <i class="fas fa-leaf"></i>
+                    <span>Garden Plots</span>
+                </a>
+                <a href="#" class="nav-item" data-page="tasks" style="display: flex; align-items: center; gap: 15px; padding: 15px 20px; color: rgba(255,255,255,0.8); text-decoration: none;">
+                    <i class="fas fa-tasks"></i>
+                    <span>Tasks</span>
+                </a>
+                <a href="#" class="nav-item" data-page="projectInfo" style="display: flex; align-items: center; gap: 15px; padding: 15px 20px; color: rgba(255,255,255,0.8); text-decoration: none;">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Project Info</span>
+                </a>
+            </div>
+            
+            <div class="sidebar-footer" style="padding: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <div class="user-info" style="display: flex; align-items: center; gap: 12px; margin-bottom: 15px;">
+                    <div class="user-avatar" style="width: 40px; height: 40px; border-radius: 50%; background-color: var(--light-green); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="user-details">
+                        <h4 id="userFullName" style="font-size: 1rem; margin-bottom: 3px;">Loading...</h4>
+                        <p id="userRole" style="font-size: 0.8rem; opacity: 0.7;">Gardener</p>
+                    </div>
+                </div>
+                <button class="btn logout-btn" id="logoutBtn" style="width: 100%; background-color: rgba(255,255,255,0.1); color: white; border: none;">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="search-bar" style="display: flex; align-items: center; background-color: #f5f5f5; border-radius: 50px; padding: 8px 20px; width: 300px;">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search for tasks, gardeners, or plants..." style="border: none; background: none; padding: 8px; width: 100%;">
+                </div>
+                
+                <div class="top-bar-actions" style="display: flex; align-items: center; gap: 20px;">
+                    <button class="btn btn-outline" style="background: transparent; color: var(--primary-green); border: 2px solid var(--primary-green); padding: 10px; border-radius: 50%; width: 40px; height: 40px;">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    <div class="notification-btn" style="position: relative;">
+                        <button class="btn btn-outline" style="background: transparent; color: var(--primary-green); border: 2px solid var(--primary-green); padding: 10px; border-radius: 50%; width: 40px; height: 40px;">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        <span style="position: absolute; top: -5px; right: -5px; background-color: var(--error-red); color: white; font-size: 0.7rem; width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">3</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Page Content -->
+            <div class="page-content">
+                <!-- Home Page -->
+                <div id="homePage" class="page">
+                    <div class="welcome-section" style="background: linear-gradient(135deg, var(--primary-green), var(--light-green)); color: white; padding: 30px; border-radius: 15px; margin-bottom: 30px;">
+                        <h1 id="welcomeMessage" style="font-size: 2.2rem; margin-bottom: 10px;">Welcome back!</h1>
+                        <p>Here's what's happening in your community garden today.</p>
+                    </div>
+                    
+                    <div class="dashboard-cards" id="statsCards">
+                        <!-- Stats loaded from backend -->
+                    </div>
+                    
+                    <div class="upcoming-tasks" style="background-color: var(--white); border-radius: 10px; padding: 25px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+                        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                            <h2 style="color: var(--dark-green); font-size: 1.5rem;">Upcoming Tasks</h2>
+                            <button class="btn btn-outline" id="addNewTaskBtn" style="background: transparent; color: var(--primary-green); border: 2px solid var(--primary-green);">
+                                <i class="fas fa-plus"></i> Add Task
+                            </button>
+                        </div>
+                        
+                        <div class="task-list" id="tasksList">
+                            <!-- Tasks loaded from backend -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Project Info Page -->
+                <div id="projectInfoPage" class="page hidden">
+                    <div class="project-info-page">
+                        <div class="project-info-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #e0e0e0;">
+                            <h1 style="color: var(--dark-green); font-size: 2rem;">Project Information</h1>
+                        </div>
+                        
+                        <div class="project-details-grid" id="projectDetails" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-bottom: 40px;">
+                            <!-- Project details loaded from backend -->
+                        </div>
+                        
+                        <h3 style="margin-top: 30px; color: var(--dark-green);">Development Team</h3>
+                        <div class="team-grid" id="teamMembersGrid">
+                            <!-- Team members loaded from backend -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Other Pages -->
+                <div id="gardenPage" class="page hidden">
+                    <h1>My Garden</h1>
+                    <p>Garden management content will appear here.</p>
+                </div>
+                
+                <div id="tasksPage" class="page hidden">
+                    <h1>Tasks</h1>
+                    <p>Task management content will appear here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration - Connects to backend
+        const API_BASE_URL = 'http://localhost:3000/api';
+        
+        // DOM Elements
+        const loginPage = document.getElementById('loginPage');
+        const dashboardPage = document.getElementById('dashboardPage');
+        const loginForm = document.getElementById('loginForm');
+        const loginError = document.getElementById('loginError');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const statsCards = document.getElementById('statsCards');
+        const tasksList = document.getElementById('tasksList');
+        const projectDetails = document.getElementById('projectDetails');
+        const teamMembersGrid = document.getElementById('teamMembersGrid');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        const userFullName = document.getElementById('userFullName');
+        const userRole = document.getElementById('userRole');
+
+        // Current user
+        let currentUser = null;
+
+        // Check authentication on page load
+        async function checkAuth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/check-auth`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.authenticated && data.user) {
+                    currentUser = data.user;
+                    showDashboard();
+                    loadUserData();
+                    loadDashboardData();
+                }
+            } catch (error) {
+                console.log('Not authenticated or server not running');
+            }
+        }
+
+        // Login function
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    currentUser = data.user;
+                    showDashboard();
+                    loadUserData();
+                    loadDashboardData();
+                } else {
+                    loginError.textContent = data.error || 'Login failed';
+                    loginError.style.display = 'block';
+                }
+            } catch (error) {
+                loginError.textContent = 'Cannot connect to server. Make sure backend is running.';
+                loginError.style.display = 'block';
+            }
+        });
+
+        // Logout function
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await fetch(`${API_BASE_URL}/logout`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                showLogin();
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+        });
+
+        // Load user data
+        function loadUserData() {
+            if (currentUser) {
+                welcomeMessage.textContent = `Welcome back, ${currentUser.full_name}!`;
+                userFullName.textContent = currentUser.full_name;
+                userRole.textContent = currentUser.role;
+            }
+        }
+
+        // Load dashboard data from backend
+        async function loadDashboardData() {
+            try {
+                // Load stats
+                const statsResponse = await fetch(`${API_BASE_URL}/dashboard/stats`, {
+                    credentials: 'include'
+                });
+                const stats = await statsResponse.json();
+                updateStatsCards(stats);
+                
+                // Load tasks
+                const tasksResponse = await fetch(`${API_BASE_URL}/dashboard/tasks`, {
+                    credentials: 'include'
+                });
+                const tasks = await tasksResponse.json();
+                updateTasksList(tasks);
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showError('Cannot connect to server');
+            }
+        }
+
+        // Update stats cards
+        function updateStatsCards(stats) {
+            statsCards.innerHTML = `
+                <div class="dashboard-card">
+                    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                        <div class="card-icon" style="width: 50px; height: 50px; border-radius: 10px; background-color: var(--lighter-green); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--dark-green);">
+                            <i class="fas fa-seedling"></i>
+                        </div>
+                        <div class="card-value">${stats.activePlants || 0}</div>
+                    </div>
+                    <h3 class="card-title" style="font-size: 1.1rem; font-weight: 600; margin-bottom: 10px;">Active Plants</h3>
+                    <div class="progress-bar" style="height: 10px; background-color: #e0e0e0; border-radius: 5px; margin: 15px 0; overflow: hidden;">
+                        <div class="progress" style="height: 100%; background-color: var(--light-green); border-radius: 5px; width: ${stats.gardenHealth || 0}%"></div>
+                    </div>
+                    <p>${stats.gardenHealth || 0}% healthy</p>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                        <div class="card-icon" style="width: 50px; height: 50px; border-radius: 10px; background-color: var(--lighter-green); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--dark-green);">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="card-value">${stats.pendingTasks || 0}</div>
+                    </div>
+                    <h3 class="card-title" style="font-size: 1.1rem; font-weight: 600; margin-bottom: 10px;">Pending Tasks</h3>
+                    <div class="progress-bar" style="height: 10px; background-color: #e0e0e0; border-radius: 5px; margin: 15px 0; overflow: hidden;">
+                        <div class="progress" style="height: 100%; background-color: var(--light-green); border-radius: 5px; width: ${stats.taskCompletion || 0}%"></div>
+                    </div>
+                    <p>${stats.taskCompletion || 0}% completed</p>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                        <div class="card-icon" style="width: 50px; height: 50px; border-radius: 10px; background-color: var(--lighter-green); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--dark-green);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="card-value">${stats.activeGardeners || 0}</div>
+                    </div>
+                    <h3 class="card-title" style="font-size: 1.1rem; font-weight: 600; margin-bottom: 10px;">Active Gardeners</h3>
+                    <div class="progress-bar" style="height: 10px; background-color: #e0e0e0; border-radius: 5px; margin: 15px 0; overflow: hidden;">
+                        <div class="progress" style="height: 100%; background-color: var(--light-green); border-radius: 5px; width: ${stats.participationRate || 0}%"></div>
+                    </div>
+                    <p>${stats.participationRate || 0}% participation rate</p>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="card-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                        <div class="card-icon" style="width: 50px; height: 50px; border-radius: 10px; background-color: var(--lighter-green); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--dark-green);">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div class="card-value">${stats.upcomingEvents || 0}</div>
+                    </div>
+                    <h3 class="card-title" style="font-size: 1.1rem; font-weight: 600; margin-bottom: 10px;">Upcoming Events</h3>
+                    <div class="progress-bar" style="height: 10px; background-color: #e0e0e0; border-radius: 5px; margin: 15px 0; overflow: hidden;">
+                        <div class="progress" style="height: 100%; background-color: var(--light-green); border-radius: 5px; width: 40%"></div>
+                    </div>
+                    <p>40% RSVP confirmed</p>
+                </div>
+            `;
+        }
+
+        // Update tasks list
+        function updateTasksList(tasks) {
+            if (!tasks || tasks.length === 0) {
+                tasksList.innerHTML = '<p>No tasks found</p>';
+                return;
+            }
+            
+            tasksList.innerHTML = tasks.map(task => `
+                <div class="task-item" style="display: flex; align-items: center; padding: 15px; border-radius: 8px; background-color: #f5f5f5; margin-bottom: 10px;">
+                    <div class="task-checkbox" style="margin-right: 15px;">
+                        <input type="checkbox" ${task.status === 'completed' ? 'checked' : ''} onchange="updateTaskStatus(${task.id}, this.checked)">
+                    </div>
+                    <div class="task-details" style="flex: 1;">
+                        <div class="task-title" style="font-weight: 600; margin-bottom: 5px;">${task.title}</div>
+                        <div class="task-info" style="display: flex; gap: 15px; font-size: 0.9rem; color: var(--text-light);">
+                            <span><i class="far fa-clock"></i> Due: ${new Date(task.due_date).toLocaleDateString()}</span>
+                            <span><i class="fas fa-map-marker-alt"></i> ${task.plot_name || 'No plot'}</span>
+                        </div>
+                    </div>
+                    <div class="task-priority" style="padding: 3px 8px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; background-color: ${getPriorityColor(task.priority)};">
+                        ${task.priority}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update task status
+        async function updateTaskStatus(taskId, completed) {
+            try {
+                await fetch(`${API_BASE_URL}/tasks/${taskId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ status: completed ? 'completed' : 'pending' })
+                });
+            } catch (error) {
+                console.error('Error updating task:', error);
+            }
+        }
+
+        // Get priority color
+        function getPriorityColor(priority) {
+            switch(priority) {
+                case 'high': return '#ffebee';
+                case 'medium': return '#fff3e0';
+                case 'low': return '#e8f5e9';
+                default: return '#f5f5f5';
+            }
+        }
+
+        // Load project info
+        async function loadProjectInfo() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/project`, {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.project && data.teamMembers) {
+                    updateProjectInfo(data.project, data.teamMembers);
+                }
+            } catch (error) {
+                console.error('Error loading project info:', error);
+            }
+        }
+
+        // Update project info
+        function updateProjectInfo(project, teamMembers) {
+            projectDetails.innerHTML = `
+                <div class="info-card" style="background-color: #f5f5f5; padding: 20px; border-radius: 10px;">
+                    <h3 style="color: var(--primary-green); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #ddd;">Project Details</h3>
+                    <div class="info-item" style="margin-bottom: 15px;">
+                        <div class="info-label" style="font-weight: 600; color: var(--text-light); margin-bottom: 5px;">Project Title</div>
+                        <div>${project.title}</div>
+                    </div>
+                    <div class="info-item" style="margin-bottom: 15px;">
+                        <div class="info-label" style="font-weight: 600; color: var(--text-light); margin-bottom: 5px;">Course Title</div>
+                        <div>${project.course_title}</div>
+                    </div>
+                    <div class="info-item" style="margin-bottom: 15px;">
+                        <div class="info-label" style="font-weight: 600; color: var(--text-light); margin-bottom: 5px;">Course Code</div>
+                        <div>${project.course_code}</div>
+                    </div>
+                    <div class="info-item" style="margin-bottom: 15px;">
+                        <div class="info-label" style="font-weight: 600; color: var(--text-light); margin-bottom: 5px;">Section</div>
+                        <div>${project.section}</div>
+                    </div>
+                </div>
+                
+                <div class="info-card" style="background-color: #f5f5f5; padding: 20px; border-radius: 10px;">
+                    <h3 style="color: var(--primary-green); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #ddd;">Submission Details</h3>
+                    <div class="info-item" style="margin-bottom: 15px;">
+                        <div class="info-label" style="font-weight: 600; color: var(--text-light); margin-bottom: 5px;">Phase</div>
+                        <div>${project.phase}</div>
+                    </div>
+                    <div class="info-item" style="margin-bottom: 15px;">
+                        <div class="info-label" style="font-weight: 600; color: var(--text-light); margin-bottom: 5px;">Submission Date</div>
+                        <div>${project.submission_date}</div>
+                    </div>
+                    <div class="info-item" style="margin-bottom: 15px;">
+                        <div class="info-label" style="font-weight: 600; color: var(--text-light); margin-bottom: 5px;">Submitted To</div>
+                        <div>${project.submitted_to}</div>
+                    </div>
+                    <div class="info-item" style="margin-bottom: 15px;">
+                        <div class="info-label" style="font-weight: 600; color: var(--text-light); margin-bottom: 5px;">Institution</div>
+                        <div>${project.institution}</div>
+                    </div>
+                </div>
+            `;
+            
+            teamMembersGrid.innerHTML = teamMembers.map(member => `
+                <div class="team-member-card">
+                    <div class="member-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="member-name" style="font-weight: 700; color: var(--dark-green); margin-bottom: 5px;">${member.name}</div>
+                    <div class="member-id" style="color: var(--text-light); font-size: 0.9rem;">${member.student_id}</div>
+                </div>
+            `).join('');
+        }
+
+        // Page navigation
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const pageId = this.getAttribute('data-page');
+                showPage(pageId);
+            });
+        });
+
+        // Show page
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.add('hidden');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId + 'Page').classList.remove('hidden');
+            
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // Load data for the page
+            if (pageId === 'home') {
+                loadDashboardData();
+            } else if (pageId === 'projectInfo') {
+                loadProjectInfo();
+            }
+        }
+
+        // Show dashboard
+        function showDashboard() {
+            loginPage.classList.add('hidden');
+            dashboardPage.classList.remove('hidden');
+        }
+
+        // Show login
+        function showLogin() {
+            dashboardPage.classList.add('hidden');
+            loginPage.classList.remove('hidden');
+            loginForm.reset();
+            loginError.style.display = 'none';
+        }
+
+        // Show error
+        function showError(message) {
+            alert(message);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', checkAuth);
+        
+        // Auto-fill demo credentials
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('username').value = 'gardener1';
+            document.getElementById('password').value = 'demo123';
+        });
+    </script>
+</body>
+</html>
