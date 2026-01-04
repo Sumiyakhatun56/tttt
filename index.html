@@ -232,8 +232,58 @@
             </div>
         </div>
     </div>
+    <!--Add task modal-->>
+    <div id="addTaskModal" class="modal hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+        <div class="modal-content" style="background-color: white; padding: 30px; border-radius: 15px; width: 90%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: var(--dark-green); margin: 0;">Add New Task</h2>
+                <button id="closeModalBtn" type="button" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-light);">&times;</button>
+            </div>
+            
+            <form id="addTaskForm">
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="taskTitle" style="display: block; margin-bottom: 5px; font-weight: 600;">Task Title *</label>
+                    <input type="text" id="taskTitle" class="form-control" placeholder="e.g., Water the roses" required>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="taskDescription" style="display: block; margin-bottom: 5px; font-weight: 600;">Description</label>
+                    <textarea id="taskDescription" class="form-control" placeholder="Add details about this task..." rows="3" style="resize: vertical;"></textarea>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="taskDueDate" style="display: block; margin-bottom: 5px; font-weight: 600;">Due Date *</label>
+                    <input type="date" id="taskDueDate" class="form-control" required>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 15px;">
+                    <label for="taskPriority" style="display: block; margin-bottom: 5px; font-weight: 600;">Priority *</label>
+                    <select id="taskPriority" class="form-control" required>
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label for="taskPlot" style="display: block; margin-bottom: 5px; font-weight: 600;">Garden Plot</label>
+                    <select id="taskPlot" class="form-control">
+                        <option value="">Select a plot (optional)</option>
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" id="cancelTaskBtn" class="btn" style="background-color: #e0e0e0; color: var(--text-dark);">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    <script>
+
+  <script>
         // API Configuration - Connects to backend
         const API_BASE_URL = 'http://localhost:3000/api';
         
@@ -251,8 +301,18 @@
         const userFullName = document.getElementById('userFullName');
         const userRole = document.getElementById('userRole');
 
+        // Modal elements
+        const addTaskModal = document.getElementById('addTaskModal');
+        const addTaskForm = document.getElementById('addTaskForm');
+        const addNewTaskBtn = document.getElementById('addNewTaskBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const cancelTaskBtn = document.getElementById('cancelTaskBtn');
+        const taskPlotSelect = document.getElementById('taskPlot');
+
         // Current user
         let currentUser = null;
+        let allTasks = [];
+
 
         // Check authentication on page load
         async function checkAuth() {
@@ -272,6 +332,7 @@
                 console.log('Not authenticated or server not running');
             }
         }
+
 
         // Login function
         loginForm.addEventListener('submit', async (e) => {
@@ -307,6 +368,7 @@
             }
         });
 
+
         // Logout function
         logoutBtn.addEventListener('click', async () => {
             try {
@@ -320,6 +382,7 @@
             }
         });
 
+
         // Load user data
         function loadUserData() {
             if (currentUser) {
@@ -328,6 +391,7 @@
                 userRole.textContent = currentUser.role;
             }
         }
+
 
         // Load dashboard data from backend
         async function loadDashboardData() {
@@ -344,6 +408,7 @@
                     credentials: 'include'
                 });
                 const tasks = await tasksResponse.json();
+                allTasks = tasks; // Store for filtering
                 updateTasksList(tasks);
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
@@ -351,10 +416,11 @@
             }
         }
 
-        // Update stats cards
+
+        // Update stats cards - NOW CLICKABLE
         function updateStatsCards(stats) {
             statsCards.innerHTML = `
-                <div class="dashboard-card">
+                <div class="dashboard-card" onclick="filterTasks('all')" style="cursor: pointer;">
                     <div class="card-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
                         <div class="card-icon" style="width: 50px; height: 50px; border-radius: 10px; background-color: var(--lighter-green); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--dark-green);">
                             <i class="fas fa-seedling"></i>
@@ -368,7 +434,7 @@
                     <p>${stats.gardenHealth || 0}% healthy</p>
                 </div>
                 
-                <div class="dashboard-card">
+                <div class="dashboard-card" onclick="filterTasks('pending')" style="cursor: pointer;">
                     <div class="card-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
                         <div class="card-icon" style="width: 50px; height: 50px; border-radius: 10px; background-color: var(--lighter-green); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--dark-green);">
                             <i class="fas fa-tasks"></i>
@@ -382,7 +448,7 @@
                     <p>${stats.taskCompletion || 0}% completed</p>
                 </div>
                 
-                <div class="dashboard-card">
+                <div class="dashboard-card" onclick="showGardeners()" style="cursor: pointer;">
                     <div class="card-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
                         <div class="card-icon" style="width: 50px; height: 50px; border-radius: 10px; background-color: var(--lighter-green); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--dark-green);">
                             <i class="fas fa-users"></i>
@@ -396,7 +462,7 @@
                     <p>${stats.participationRate || 0}% participation rate</p>
                 </div>
                 
-                <div class="dashboard-card">
+                <div class="dashboard-card" onclick="showUpcomingEvents()" style="cursor: pointer;">
                     <div class="card-header" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
                         <div class="card-icon" style="width: 50px; height: 50px; border-radius: 10px; background-color: var(--lighter-green); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; color: var(--dark-green);">
                             <i class="fas fa-calendar-alt"></i>
@@ -412,10 +478,17 @@
             `;
         }
 
+
         // Update tasks list
         function updateTasksList(tasks) {
-            if (!tasks || tasks.length === 0) {
-                tasksList.innerHTML = '<p>No tasks found</p>';
+            if (!Array.isArray(tasks)) {
+                console.error('Tasks is not an array:', tasks);
+                tasksList.innerHTML = '<p style="padding: 20px; text-align: center; color: #666;">Unable to load tasks. Please refresh the page.</p>';
+                return;
+            }
+            
+            if (tasks.length === 0) {
+                tasksList.innerHTML = '<p style="padding: 20px; text-align: center; color: #666;">No tasks found. Click "Add Task" to create one!</p>';
                 return;
             }
             
@@ -438,6 +511,7 @@
             `).join('');
         }
 
+
         // Update task status
         async function updateTaskStatus(taskId, completed) {
             try {
@@ -449,10 +523,12 @@
                     credentials: 'include',
                     body: JSON.stringify({ status: completed ? 'completed' : 'pending' })
                 });
+                loadDashboardData(); // Refresh
             } catch (error) {
                 console.error('Error updating task:', error);
             }
         }
+
 
         // Get priority color
         function getPriorityColor(priority) {
@@ -463,6 +539,7 @@
                 default: return '#f5f5f5';
             }
         }
+
 
         // Load project info
         async function loadProjectInfo() {
@@ -479,6 +556,7 @@
                 console.error('Error loading project info:', error);
             }
         }
+
 
         // Update project info
         function updateProjectInfo(project, teamMembers) {
@@ -535,6 +613,7 @@
             `).join('');
         }
 
+
         // Page navigation
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', function(e) {
@@ -543,6 +622,7 @@
                 showPage(pageId);
             });
         });
+
 
         // Show page
         function showPage(pageId) {
@@ -557,8 +637,10 @@
             // Update active nav item
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
+                if(item.getAttribute('data-page') === pageId) {
+                    item.classList.add('active');
+                }
             });
-            event.currentTarget.classList.add('active');
             
             // Load data for the page
             if (pageId === 'home') {
@@ -568,11 +650,13 @@
             }
         }
 
+
         // Show dashboard
         function showDashboard() {
             loginPage.classList.add('hidden');
             dashboardPage.classList.remove('hidden');
         }
+
 
         // Show login
         function showLogin() {
@@ -582,19 +666,221 @@
             loginError.style.display = 'none';
         }
 
+
         // Show error
         function showError(message) {
             alert(message);
         }
 
+
+        // ==================== ADD TASK MODAL FUNCTIONS ====================
+
+        // Open Add Task Modal
+        function openAddTaskModal() {
+            // Set default due date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const dateStr = tomorrow.toISOString().split('T')[0];
+            document.getElementById('taskDueDate').value = dateStr;
+            
+            // Load available plots
+            loadPlotsForTask();
+            
+            // Show modal
+            addTaskModal.classList.remove('hidden');
+        }
+
+        // Close modal
+        function closeAddTaskModal() {
+            addTaskModal.classList.add('hidden');
+            addTaskForm.reset();
+        }
+
+        // Load plots for dropdown
+        async function loadPlotsForTask() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/plots`, {
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    const plots = await response.json();
+                    taskPlotSelect.innerHTML = '<option value="">Select a plot (optional)</option>';
+                    plots.forEach(plot => {
+                        const option = document.createElement('option');
+                        option.value = plot.id;
+                        option.textContent = `${plot.plot_name} - ${plot.location}`;
+                        taskPlotSelect.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading plots:', error);
+            }
+        }
+
+        // Filter tasks by status
+        function filterTasks(status) {
+            if (status === 'pending') {
+                const filtered = allTasks.filter(task => task.status === 'pending');
+                updateTasksList(filtered);
+                showNotification(`Showing ${filtered.length} pending tasks`, 'info');
+            } else {
+                updateTasksList(allTasks);
+                showNotification('Showing all tasks', 'info');
+            }
+        }
+
+        // Show gardeners info
+        function showGardeners() {
+            showNotification('Gardeners feature coming soon!', 'info');
+        }
+
+        // Show upcoming events
+        function showUpcomingEvents() {
+            showNotification('Events feature coming soon!', 'info');
+        }
+
+        // Notification function
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background-color: ${type === 'success' ? '#4caf50' : type === 'error' ? '#f44336' : '#2196F3'};
+                color: white;
+                border-radius: 5px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 2000;
+                animation: slideIn 0.3s ease-out;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Add CSS animations for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+            
+            .dashboard-card {
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+            
+            .dashboard-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            }
+        `;
+        document.head.appendChild(style);
+
+
+        // ==================== EVENT LISTENERS ====================
+
         // Initialize
-        document.addEventListener('DOMContentLoaded', checkAuth);
-        
-        // Auto-fill demo credentials
         document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            
+            // Auto-fill demo credentials
             document.getElementById('username').value = 'gardener1';
             document.getElementById('password').value = 'demo123';
+            
+            // Add Task button handlers
+            if (addNewTaskBtn) {
+                addNewTaskBtn.addEventListener('click', openAddTaskModal);
+            }
+            
+            // Top bar add button
+            const topAddBtn = document.querySelector('.top-bar-actions .btn-outline');
+            if (topAddBtn) {
+                topAddBtn.addEventListener('click', openAddTaskModal);
+            }
+            
+            // Modal close handlers
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener('click', closeAddTaskModal);
+            }
+            
+            if (cancelTaskBtn) {
+                cancelTaskBtn.addEventListener('click', closeAddTaskModal);
+            }
+            
+            // Close modal when clicking outside
+            if (addTaskModal) {
+                addTaskModal.addEventListener('click', (e) => {
+                    if (e.target === addTaskModal) {
+                        closeAddTaskModal();
+                    }
+                });
+            }
+            
+            // Handle add task form submission
+            if (addTaskForm) {
+                addTaskForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    
+                    const taskData = {
+                        title: document.getElementById('taskTitle').value,
+                        description: document.getElementById('taskDescription').value,
+                        due_date: document.getElementById('taskDueDate').value,
+                        priority: document.getElementById('taskPriority').value,
+                        plot_id: document.getElementById('taskPlot').value || null,
+                        status: 'pending'
+                    };
+                    
+                    try {
+                        const response = await fetch(`${API_BASE_URL}/tasks`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            credentials: 'include',
+                            body: JSON.stringify(taskData)
+                        });
+                        
+                        if (response.ok) {
+                            closeAddTaskModal();
+                            loadDashboardData();
+                            showNotification('Task added successfully!', 'success');
+                        } else {
+                            showNotification('Failed to add task', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error adding task:', error);
+                        showNotification('Error adding task', 'error');
+                    }
+                });
+            }
         });
     </script>
+
+   
 </body>
 </html>
